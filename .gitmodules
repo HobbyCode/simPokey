@@ -1,3 +1,0 @@
-[submodule "submodules/prosim-datasource"]
-	path = submodules/prosim-datasource
-	url = https://github.com/mteichtahl/proSimDataSource.git

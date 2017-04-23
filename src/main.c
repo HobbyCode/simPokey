@@ -1,4 +1,5 @@
 #include "main.h"
+#include "libProSimDataSource.h"
 
 extern void startSimLoop();
 
@@ -45,16 +46,23 @@ void intHandler(int sig)
     getchar(); // Get new line character
 }
 
+void *handleSimUpdate(simElements *el)
+{
 
-void* poo(void* data) {
-    printf("<------ HERE I AM ----->\n");
-    return NULL;
+    device_port_t *pin = malloc(sizeof(device_port_t));
+
+    int deviceId = findPinMappingByName(el->id, pin);
+
+    if (deviceId != -1)
+    {
+        updatePin(deviceId, pin, el->value);
+    }
 }
 
 int main()
 {
     pthread_t cliThread;
-    
+
     signal(SIGINT, intHandler);
 
     if (zlog_init(logConfigFile))
@@ -85,7 +93,7 @@ int main()
 
     zlog_info(logHandler, "Found %d device(s)", numberOfDevices);
 
-    initSimConnection(simConfig->ipAddress, simConfig->port, &poo) ;
+    initSimConnection(simConfig->ipAddress, simConfig->port, &handleSimUpdate);
 
     int x = 0;
     if (pthread_create(&cliThread, NULL, cliInit, &x))
@@ -93,7 +101,7 @@ int main()
         fprintf(stderr, "Error creating thread\n");
         return 1;
     }
-   
+
     for (int i = 0; i < numberOfDevices; i++)
     {
 
@@ -109,6 +117,9 @@ int main()
         {
             device->pokey = malloc(sizeof(sPoKeysDevice));
             int ret = connectToDevice(&networkDevice, device->pokey);
+
+            printf("<--------- connectToDevice %d ------->\n", ret);
+
             if (ret)
             {
                 device->hasPokey = 1;
@@ -121,10 +132,12 @@ int main()
                 dumpDevices();
 
                 // start a thread per device
-                int y;
-                if (pthread_create(&device->pThread, NULL, startDeviceLoop, &y)){
-                    printf("could not start startDeviceLoop thread");
-                };
+                // int y;
+                // if (pthread_create(&device->pThread, NULL, startDeviceLoop, &y))
+                // {
+                //     printf("could not start startDeviceLoop thread");
+                // };
+                //startDeviceLoop(device);
             }
         }
     }

@@ -11,13 +11,22 @@
 //forward decl
 void *logHandler;
 
-int findPinMappingByName(char* name) {
-    zlog_info(logHandler, "Finding pin mapping");
-
+int findPinMappingByName(char *name, device_port_t *port)
+{
+    device_t *device;
     for (int i = 0; i < activeDevices; i++)
-    {
+    { 
+        device = devices[i];
+        int portId = findPinByName(device, name);
         
+             
+        if (portId != -1)
+        {          
+            memcpy(port, device->pins[portId], sizeof(device_port_t));
+            return i;
+        }
     }
+    return -1;
 }
 
 int syncDeviceName(device_t *device)
@@ -94,7 +103,6 @@ void dumpDevice(device_t *device)
 
 void dumpDevices()
 {
-    zlog_info(logHandler, "Dumping device to stdout");
 
     for (int i = 0; i < activeDevices; i++)
     {
@@ -104,11 +112,11 @@ void dumpDevices()
 
 int getDeviceBySerialNumber(device_t *device, char *serialNumber)
 {
-    for (int i = 0; i < numberOfDevices ; i++)
+    for (int i = 0; i < numberOfDevices; i++)
     {
 
         device_t *searchDevice = devices[i];
-            
+
         if (strcmp(serialNumber, searchDevice->serialNumber) == 0)
         {
             memcpy(device, searchDevice, sizeof(device_t));
@@ -139,8 +147,9 @@ void digitalIOTimerCallback(uv_timer_t *timer, int status)
         /** iterate over the pins **/
         for (int i = 0; i < device->numberOfPins; i++)
         {
-            int devicePin = device->pins[i]->pin-1;
-            if(device->pins[i]->type != DIGITAL_INPUT){
+            int devicePin = device->pins[i]->pin - 1;
+            if (device->pins[i]->type != DIGITAL_INPUT)
+            {
                 continue;
             }
 
@@ -157,7 +166,6 @@ void digitalIOTimerCallback(uv_timer_t *timer, int status)
     }
 }
 
-
 int startDeviceLoop(device_t *device)
 {
 
@@ -170,7 +178,8 @@ int startDeviceLoop(device_t *device)
 
     int ret = uv_timer_start(&digitalIOTimer, (uv_timer_cb)&digitalIOTimerCallback, DEVICE_START_DELAY, freq);
 
-    if (ret == 0) {
+    if (ret == 0)
+    {
         uv_run(device->loop, UV_RUN_DEFAULT);
     }
 

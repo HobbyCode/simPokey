@@ -2,6 +2,7 @@
 #include <zlog.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "../PoKeysLib.h"
 #include "../config/config.h"
@@ -147,6 +148,19 @@ int checkPinExistsInConfig(device_t *device, int pin)
     return PIN_FREE;
 }
 
+int findPinByName(device_t *device, char *name)
+{
+
+    for (int i = 0; i < device->numberOfPins; i++)
+    {
+        if (memcmp(device->pins[i]->name, name, strlen(device->pins[i]->name)) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int loadPinConfiguration(config_setting_t *configuredPorts, device_t *device)
 {
     int pin, defaultValue = 0, type = 0, ret, pinIndex = 0, numberOfPins = 0;
@@ -208,7 +222,7 @@ int loadPinConfiguration(config_setting_t *configuredPorts, device_t *device)
         }
 
         config_setting_lookup_int(configurationPort, "default", &defaultValue);
-         if (ret == CONFIG_FALSE)
+        if (ret == CONFIG_FALSE)
         {
             defaultValue = 0;
         }
@@ -334,8 +348,10 @@ int loadPWMConfiguration(config_setting_t *configuredPorts, device_t *device)
 int applyPinConfigurationToDevice(device_t *device)
 {
 
+
     for (int i = 0; i < device->numberOfPins; i++)
     {
+
         device_port_t *pin = device->pins[i];
 
         if (pin->valid == PIN_INVALID)
@@ -362,8 +378,8 @@ int applyPinConfigurationToDevice(device_t *device)
         {
 
             uint8_t ch;
-            
-            uint8_t *enabledChannels= malloc(sizeof(uint8_t));
+
+            uint8_t *enabledChannels = malloc(sizeof(uint8_t));
 
             if (pin->pin == 17)
                 ch = 6;
@@ -378,8 +394,8 @@ int applyPinConfigurationToDevice(device_t *device)
             else if (pin->pin == 22)
                 ch = 1;
 
-           enabledChannels[(ch-1)]=1;
-            
+            enabledChannels[(ch - 1)] = 1;
+
             unsigned int *dutyCycle = malloc(6 * sizeof(unsigned int));
 
             dutyCycle[ch - 1] = (unsigned int)(PWM_CLOCK / pin->dutyCycle);
@@ -392,8 +408,36 @@ int applyPinConfigurationToDevice(device_t *device)
 
             continue;
         }
-            PK_DigitalIOSet(device->pokey);
 
+    
     }
+
+        int rv = PK_DigitalIOSet(device->pokey);
+        printf("<--------- PK_DigitalIOSet %d ------->\n", rv);
     return 0;
+}
+
+int updatePin(int deviceId, device_port_t *pin, char *value)
+{
+    int intValue;
+    device_t *device = devices[deviceId];
+
+    if (strcmp(value, " 0") == 0)
+    {
+        intValue = 0;
+    }
+    else
+    {
+        intValue = 1;
+    }
+
+    printf("%d\n", intValue);
+
+    pin->previousValue = pin->value;
+    pin->value = intValue;
+    int rv = PK_DigitalIOSetSingle(device->pokey, 3, 1);
+
+    printf("%d\n", rv);
+
+    return -1;
 }

@@ -1,5 +1,5 @@
-#ifndef __DEVICES_H
-#define __DEVICES_H
+#ifndef __POKEY_H
+#define __POKEY_H
 
 #include "../../PoKeysLib.h"
 #include <uv.h>
@@ -15,7 +15,7 @@
 #define MAX_DEVICE_NAME_LENGTH 10
 
 typedef struct{
-    const char* name;
+    char* name;
     int pin;
     int type;
     int defaultValue;
@@ -26,8 +26,8 @@ typedef struct{
 } device_port_t;
 
 typedef struct {
-    const char* serialNumber;
-    const char* name;
+    char* serialNumber;
+    char* name;
     int uid;
     int hasPokey;
     int dhcp;
@@ -36,7 +36,6 @@ typedef struct {
     device_port_t *pins[MAX_PINS];
     uv_loop_t* loop;
     pthread_t pThread;
-
 } device_t;
 
 int numberOfDevices;
@@ -50,7 +49,7 @@ int getDeviceBySerialNumber(device_t* device, char *serialNumber);
 int syncDeviceName(device_t *device);
 int applyConfiguration(device_t *device);
 int startDeviceLoop(device_t *device);
-int findPinMappingByName(char* name);
+int findPinMappingByName(char *name, device_port_t* port);
 
 
 #endif

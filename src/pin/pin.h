@@ -31,5 +31,9 @@ int loadPinConfiguration(config_setting_t* configuredPorts,device_t *device);
 int loadPWMConfiguration(config_setting_t *configuredPorts, device_t *device);
 int checkPinExistsInConfig(device_t *device, int pin);
 int applyPinConfigurationToDevice(device_t *device);
+int findPinByName(device_t *device, char *name);
+int updatePin(int deviceId, device_port_t* pin, char *value);
+
+
 
 #endif
